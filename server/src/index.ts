@@ -1,22 +1,23 @@
 require('source-map-support').install();
 
+import { ApolloServerPluginLandingPageGraphQLPlayground } from 'apollo-server-core';
+import { ApolloServer } from 'apollo-server-express';
+import MongoStore from 'connect-mongo';
+import cors from 'cors';
 import { configDotenv } from 'dotenv';
 import express from 'express';
+import session from 'express-session';
+import mongoose from 'mongoose';
 import morgan from 'morgan';
 import 'reflect-metadata';
-import { DataSource, DataSourceOptions } from 'typeorm';
-import { User } from './entities/User';
-import { Post } from './entities/Post';
 import { buildSchema } from 'type-graphql';
-import { ApolloServer } from 'apollo-server-express';
-import { ApolloServerPluginLandingPageGraphQLPlayground } from 'apollo-server-core';
-import { UserResolver } from './resolvers/user';
-import mongoose from 'mongoose';
-import session from 'express-session';
-import MongoStore from 'connect-mongo';
+import { DataSource, DataSourceOptions } from 'typeorm';
 import { COOKIE_NAME, __prod__ } from './constants';
+import { Post } from './entities/Post';
+import { User } from './entities/User';
 import { HelloResolver } from './resolvers/hello';
-import cors from 'cors';
+import { PostResolver } from './resolvers/post';
+import { UserResolver } from './resolvers/user';
 import { Context } from './types/Context';
 
 configDotenv();
@@ -70,7 +71,8 @@ const main = async () => {
 			name: COOKIE_NAME,
 			store: MongoStore.create({ mongoUrl }),
 			cookie: {
-				maxAge: 1000 * 60 * 60, // one hour
+				// maxAge: 1000 * 60 * 60, // one hour
+				maxAge: 1000 * 60, // 1 min
 				httpOnly: true, // JS front end cannot access the cookie
 				sameSite: 'lax', // todo check about this, why false not working
 				secure: __prod__,
@@ -84,7 +86,7 @@ const main = async () => {
 	// apollo server
 	const apolloServer = new ApolloServer({
 		schema: await buildSchema({
-			resolvers: [UserResolver, HelloResolver],
+			resolvers: [UserResolver, HelloResolver, PostResolver],
 			validate: false,
 		}),
 

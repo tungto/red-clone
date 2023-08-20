@@ -1,0 +1,46 @@
+# Register
+mutation {
+	register(
+		registerInput: {
+			email: "frodo@gmail.com"
+			username: "frodo"
+			password: "pw123"
+		}
+	) {
+		code
+		success
+		message
+		errors {
+			message
+			field
+		}
+		user {
+			username
+			email
+			updatedAt
+			createdAt
+		}
+	}
+}
+
+# Log In
+mutation {
+	login(loginInput: { email: "toxtung", password: "pw123" }) {
+		code
+		success
+		errors {
+			field
+			message
+		}
+		message
+		user {
+			username
+			createdAt
+			email
+		}
+	}
+}
+# log out
+mutation Logout {
+	logout
+}

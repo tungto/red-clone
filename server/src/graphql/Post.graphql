@@ -1,0 +1,76 @@
+mutation UpdatePost {
+	updatePost(
+		updatePostInput: {
+			id: 2
+			title: "This is my first post update"
+			text: "Hit the Play Button to get a response here"
+		}
+	) {
+		post {
+			title
+			text
+			createdAt
+			id
+			updatedAt
+		}
+	}
+}
+
+mutation CreatePost {
+	createPost(
+		createPostInput: {
+			title: "This is my first post"
+			text: "Hit the Play Button to get a response here"
+		}
+	) {
+		success
+		message
+		errors {
+			field
+			message
+		}
+		post {
+			title
+			text
+			createdAt
+			id
+			updatedAt
+		}
+	}
+}
+
+mutation DeletePost {
+	deletePost(id: 3) {
+		code
+		success
+		message
+	}
+}
+
+mutation UpdatePost {
+	updatePost(
+		updatePostInput: {
+			id: 2
+			title: "This is my first post updated - second try"
+			text: "Hit the Play Button to get a response here"
+		}
+	) {
+		post {
+			title
+			text
+			createdAt
+			id
+			updatedAt
+		}
+	}
+}
+
+query getPost {
+	getPost(id: 1) {
+		id
+		title
+		text
+		createdAt
+		updatedAt
+	}
+}

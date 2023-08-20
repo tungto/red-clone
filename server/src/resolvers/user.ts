@@ -70,7 +70,7 @@ export class UserResolver {
 				email,
 			});
 
-			newUser = await User.save(newUser);
+			newUser = await newUser.save();
 
 			// ATTACH COOKIE TO REQ
 			req.session.userId = newUser.id;

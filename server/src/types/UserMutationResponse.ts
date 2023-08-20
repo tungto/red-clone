@@ -9,7 +9,7 @@ export class UserMutationResponse implements IMutationResponse {
 	success: boolean;
 	message?: string;
 
-	@Field({ nullable: true })
+	@Field((_type) => User, { nullable: true })
 	user?: User;
 
 	@Field((_type) => [FieldError], { nullable: true })

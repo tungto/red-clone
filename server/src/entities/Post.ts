@@ -1,4 +1,4 @@
-import { ObjectType } from 'type-graphql';
+import { Field, ID, ObjectType } from 'type-graphql';
 import {
 	BaseEntity,
 	Column,
@@ -12,18 +12,23 @@ import {
 @ObjectType()
 @Entity()
 export class Post extends BaseEntity {
+	@Field((_type) => ID)
 	@PrimaryGeneratedColumn()
 	id!: number;
 
-	@Column()
+	@Field()
+	@Column({ unique: true })
 	title!: string;
 
+	@Field()
 	@Column()
 	text!: string;
 
+	@Field()
 	@CreateDateColumn()
 	createdAt: Date;
 
+	@Field()
 	@UpdateDateColumn()
 	updatedAt: Date;
 }

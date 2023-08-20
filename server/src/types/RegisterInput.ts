@@ -4,8 +4,10 @@ import { Field, InputType } from 'type-graphql';
 export class RegisterInput {
 	@Field()
 	email: string;
+
 	@Field()
 	username: string;
+
 	@Field()
 	password: string;
 }
