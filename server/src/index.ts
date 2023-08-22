@@ -37,8 +37,14 @@ const main = async () => {
 	await appDataSource.initialize();
 
 	const app = express();
+
 	//cors
-	app.use(cors());
+	app.use(
+		cors({
+			origin: 'http://localhost:3000',
+			credentials: true,
+		})
+	);
 
 	// logging
 	app.use(morgan('dev'));
