@@ -7,58 +7,61 @@ import {
 	useToast,
 } from '@chakra-ui/react';
 import { Form, Formik, FormikHelpers } from 'formik';
+import { useRouter } from 'next/router';
 import InputField from '../components/InputField';
 import Wrapper from '../components/Wrapper';
 import {
+	LoginInput,
 	MeDocument,
 	MeQuery,
-	RegisterInput,
-	useRegisterMutation,
+	useLoginMutation,
 } from '../generated/graphql';
 import { mapFieldErrors } from '../helpers/mapFieldErrors';
-import { useRouter } from 'next/router';
 import useCheckAuth from '../utils/useCheckAuth';
 
-const Register = () => {
-	const initialValues = { username: '', password: '', email: '' };
+const Login = () => {
+	const initialValues = { email: '', password: '' };
 
 	const router = useRouter();
-
 	const toast = useToast();
-	const [registerUser, { data, error, loading: _registerUserLoading }] =
-		useRegisterMutation();
+	const [loginUser, { loading: _registerUserLoading, data, error }] =
+		useLoginMutation();
 
 	const { loading: authLoading, data: authData } = useCheckAuth();
 
 	// * stop loading icon by return
-	const onRegisterSubmit = async (
-		values: RegisterInput,
-		{ setErrors }: FormikHelpers<RegisterInput>
+	const onLoginSubmit = async (
+		values: LoginInput,
+		{ setErrors }: FormikHelpers<LoginInput>
 	) => {
-		const response = await registerUser({
+		const response = await loginUser({
 			variables: {
-				registerInput: values,
+				loginInput: values,
 			},
-			// have to update cache here to get the latest data instead of cache
 			update(cache, { data }) {
-				if (data?.register.success) {
+				console.log('DATA LOGIN: ', data);
+
+				// const meData = cache.readQuery({ query: MeDocument });
+				// console.log('MEDATA', meData);
+
+				if (data?.login.success) {
 					cache.writeQuery<MeQuery>({
 						query: MeDocument,
-						data: { me: data.register.user },
+						data: { me: data.login.user },
 					});
 				}
 			},
 		});
 
-		if (response.data?.register.errors) {
-			setErrors(mapFieldErrors(response.data?.register.errors));
+		if (response.data?.login.errors) {
+			setErrors(mapFieldErrors(response.data?.login.errors));
 		}
 
-		// register successfully
-		if (response.data?.register.user) {
+		// login successfully
+		if (response.data?.login.user) {
 			toast({
 				title: 'Account created.',
-				description: `We've created your account for ${response.data?.register.user.username}.`,
+				description: `We've created your account for ${response.data?.login.user.username}.`,
 				status: 'success',
 				duration: 9000,
 				isClosable: true,
@@ -77,22 +80,12 @@ const Register = () => {
 
 	return (
 		<Wrapper>
-			{error && <p>Failed to register</p>}
-			{data && data?.register.success && (
-				<p> Register successfully ${JSON.stringify(data)}</p>
-			)}
-			<Formik initialValues={initialValues} onSubmit={onRegisterSubmit}>
+			{error && <p>Failed to login. Internal server error</p>}
+
+			<Formik initialValues={initialValues} onSubmit={onLoginSubmit}>
 				{({ isSubmitting }) => (
 					<Form>
 						<FormControl>
-							<Box mt={4}>
-								<InputField
-									name='username'
-									placeholder='Username'
-									label='Username'
-									type='text'
-								/>
-							</Box>
 							<Box mt={4}>
 								<InputField
 									name='email'
@@ -114,7 +107,7 @@ const Register = () => {
 								colorScheme='teal'
 								mt={4}
 								isLoading={isSubmitting}>
-								Register
+								Login
 							</Button>
 						</FormControl>
 					</Form>
@@ -124,4 +117,4 @@ const Register = () => {
 	);
 };
 
-export default Register;
+export default Login;
