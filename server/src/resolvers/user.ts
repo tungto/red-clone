@@ -7,6 +7,11 @@ import { validateRegisterInput } from '../utils/validateRegisterInput';
 import { LoginInput } from '../types/LoginInput';
 import { Context } from '../types/Context';
 import { COOKIE_NAME } from '../constants';
+import { randomBytes } from 'crypto';
+import bcrypt from 'bcrypt';
+import { ForgotPasswordInput } from '../types/ForgotPasswordInput';
+import sendEmail, { INodeMailerInfo } from '../utils/sendEmail';
+import { TokenModel } from '../models/Token';
 
 @Resolver()
 export class UserResolver {
@@ -192,5 +197,58 @@ export class UserResolver {
 		})) as unknown as boolean;
 
 		return destroyResult;
+	}
+
+	@Mutation((_return) => Boolean)
+	async forgotPassword(
+		@Arg('forgotPwInput') forgotPwInput: ForgotPasswordInput
+	): Promise<Boolean> {
+		try {
+			// check if email is valid
+			const user = await User.findOneBy({ email: forgotPwInput.email });
+			const bcryptSalt = 9;
+
+			if (!user) {
+				return true;
+			}
+
+			// create reset token
+			const resetToken = randomBytes(32).toString('hex');
+
+			/**
+			 * compare argon2 vs bcrypt for hashing
+			 * https://stytch.com/blog/argon2-vs-bcrypt-vs-scrypt/#:~:text=Argon2%20is%20a%20great%20memory,%2C%20CPU%2C%20or%20memory%20hardness.
+			 */
+			const hashedToken = await bcrypt.hash(
+				resetToken,
+				Number(bcryptSalt)
+			);
+
+			// save token to mongodb
+			const token = new TokenModel({
+				userId: `${user.id}`,
+				token: hashedToken,
+			});
+
+			await token.save();
+
+			// create reset pw link
+
+			const mailOptions: INodeMailerInfo = {
+				from: 'toxtung@gmail.com',
+				to: forgotPwInput.email,
+				subject: 'Forgot Password Reset',
+				html: `click here to reset password: 
+			<a href="http://localhost:3000/resetPassword?token=${resetToken}&userId=${user.id}">Click here</a>`,
+			};
+
+			// send reset pw to email
+			await sendEmail(mailOptions);
+			return true;
+		} catch (error) {
+			console.log(`ERROR RESET PASSWORD ${error.message}`);
+
+			return false;
+		}
 	}
 }

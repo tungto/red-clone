@@ -9,23 +9,23 @@
 		"start": "concurrently yarn:start:*"
 	},
 	"devDependencies": {
+		"@types/bcrypt": "^5.0.0",
 		"@types/cors": "^2.8.13",
 		"@types/express": "^4.17.17",
 		"@types/express-session": "^1.17.7",
-		"@types/mongoose": "^5.11.97",
 		"@types/morgan": "^1.9.4",
 		"@types/node": "^20.4.9",
+		"@types/nodemailer": "^6.4.9",
 		"concurrently": "^8.2.0",
-		"install": "^0.13.0",
 		"nodemon": "^3.0.1",
-		"source-map-support": "^0.5.21",
-		"ts-node": "^10.9.1",
-		"typescript": "^5.1.6"
+		"source-map-support": "^0.5.21"
 	},
 	"dependencies": {
+		"@typegoose/typegoose": "^11.4.1",
 		"apollo-server-core": "^3.12.0",
 		"apollo-server-express": "^3.12.0",
 		"argon2": "^0.31.0",
+		"bcrypt": "^5.1.1",
 		"class-validator": "^0.14.0",
 		"connect-mongo": "^5.0.0",
 		"cors": "^2.8.5",
@@ -34,11 +34,14 @@
 		"express-session": "^1.17.3",
 		"graphql": "^15.3.0",
 		"helmet": "^7.0.0",
-		"mongoose": "5.13.3",
+		"mongoose": "^7.4.4",
 		"morgan": "^1.10.0",
+		"nodemailer": "^6.9.4",
 		"pg": "^8.11.2",
 		"reflect-metadata": "^0.1.13",
+		"ts-node": "^10.9.1",
 		"type-graphql": "^1.1.1",
-		"typeorm": "^0.3.17"
+		"typeorm": "^0.3.17",
+		"typescript": "^5.1.6"
 	}
 }
