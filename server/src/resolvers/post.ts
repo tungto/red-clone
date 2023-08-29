@@ -1,9 +1,11 @@
 import {
 	Arg,
+	FieldResolver,
 	ID,
 	Mutation,
 	Query,
 	Resolver,
+	Root,
 	UseMiddleware,
 } from 'type-graphql';
 import { Post } from '../entities/Post';
@@ -11,9 +13,29 @@ import { checkAuth } from '../middleware/checkAuth';
 import { CreatePostInput } from '../types/CreatePostInput';
 import { PostMutationResponse } from '../types/PostMutationResponse';
 import { UpdatePostInput } from '../types/UpdatePostInput';
+import { User } from '../entities/User';
 
-@Resolver()
+//*field resolvers - https://typegraphql.com/docs/resolvers.html#field-resolvers
+@Resolver((_of) => Post)
 export class PostResolver {
+	@FieldResolver((_return) => String)
+	textSnippet(@Root() root: Post) {
+		return root.text.slice(0, 100);
+	}
+
+	@FieldResolver((_return) => User, { nullable: true })
+	async user(@Root() root: Post) {
+		const userId = root.userId;
+
+		const user = await User.findOneBy({ id: userId });
+
+		if (!user) {
+			return null;
+		}
+
+		return user;
+	}
+
 	/**
 	 * CREATE POST
 	 * @param param0
@@ -22,14 +44,14 @@ export class PostResolver {
 	@Mutation((_returns) => PostMutationResponse)
 	@UseMiddleware(checkAuth)
 	async createPost(
-		@Arg('createPostInput') { title, text }: CreatePostInput
+		@Arg('createPostInput') { title, text, userId }: CreatePostInput
 	): Promise<PostMutationResponse> {
 		try {
 			// check if user have permission to create post
 			// check if cookie, userId provided
 
 			//1. CREATE and SAVE POST
-			const newPost = await Post.create({ title, text }).save();
+			const newPost = await Post.create({ title, text, userId }).save();
 
 			return {
 				code: 201,

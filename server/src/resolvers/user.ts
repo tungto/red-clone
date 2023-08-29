@@ -1,7 +1,15 @@
 import * as argon2 from 'argon2';
 import bcrypt from 'bcrypt';
 import { randomBytes } from 'crypto';
-import { Arg, Ctx, Mutation, Query, Resolver } from 'type-graphql';
+import {
+	Arg,
+	Ctx,
+	FieldResolver,
+	Mutation,
+	Query,
+	Resolver,
+	Root,
+} from 'type-graphql';
 import { COOKIE_NAME } from '../constants';
 import { User } from '../entities/User';
 import { TokenModel } from '../models/Token';
@@ -13,9 +21,17 @@ import { ResetPasswordInput } from '../types/ResetPasswordInput';
 import { UserMutationResponse } from '../types/UserMutationResponse';
 import sendEmail, { INodeMailerInfo } from '../utils/sendEmail';
 import { validateRegisterInput } from '../utils/validateRegisterInput';
+import { Post } from '../entities/Post';
 
-@Resolver()
+@Resolver((_of) => User)
 export class UserResolver {
+	@FieldResolver((_return) => [Post])
+	async posts(@Root() root: User) {
+		const posts = await Post.findBy({ userId: root.id });
+
+		return posts;
+	}
+
 	@Query((_return) => User, { nullable: true })
 	async me(@Ctx() { req }: Context): Promise<User | undefined | null> {
 		if (!req.session.userId) {

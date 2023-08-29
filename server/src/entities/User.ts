@@ -4,9 +4,11 @@ import {
 	Column,
 	CreateDateColumn,
 	Entity,
+	OneToMany,
 	PrimaryGeneratedColumn,
 	UpdateDateColumn,
 } from 'typeorm';
+import { Post } from './Post';
 
 @ObjectType()
 @Entity() // db table
@@ -26,6 +28,10 @@ export class User extends BaseEntity {
 	// don't want to return pw, so not put the Field decorator in this line
 	@Column()
 	password!: string;
+
+	@Field((_return) => [Post])
+	@OneToMany(() => Post, (post) => post.user)
+	posts: Post[];
 
 	@Field()
 	@CreateDateColumn()
