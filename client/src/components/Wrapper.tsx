@@ -3,11 +3,16 @@ import React, { ReactNode } from 'react';
 
 interface IWrapperProps {
 	children: ReactNode;
+	size?: string;
 }
 
-const Wrapper = ({ children }: IWrapperProps) => {
+const Wrapper = ({ children, size }: IWrapperProps) => {
 	return (
-		<Box maxW='400px' w='100%' mt={8} mx='auto'>
+		<Box
+			maxW={size === 'regular' ? '800px' : '400px'}
+			w='100%'
+			mt={8}
+			mx='auto'>
 			{children}
 		</Box>
 	);

@@ -1,6 +1,6 @@
 import { useRouter } from 'next/router';
-import { useMeQuery } from '../generated/graphql';
 import { useEffect } from 'react';
+import { useMeQuery } from '../generated/graphql';
 
 const useCheckAuth = () => {
 	const router = useRouter();
@@ -10,7 +10,10 @@ const useCheckAuth = () => {
 		if (
 			!loading &&
 			data?.me &&
-			(router.route === '/login' || router.route === '/register')
+			(router.route === '/login' ||
+				router.route === '/register' ||
+				router.route === '/forgot-password' ||
+				router.route === '/reset-password')
 		) {
 			router.push('/');
 		}

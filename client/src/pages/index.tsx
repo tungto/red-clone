@@ -1,23 +1,26 @@
-import { Spinner } from '@chakra-ui/react';
-import { Navbar } from '../components/Navbar';
+import { Flex, Spinner, Stack } from '@chakra-ui/react';
+
 import { PostsDocument, usePostsQuery } from '../generated/graphql';
 import { addApolloState, initializeApollo } from '../lib/apolloClient';
+import Layout from '../components/Layout';
 
 const Index = () => {
 	const { data, loading } = usePostsQuery();
 
-	if (loading) {
-		return <Spinner />;
-	}
-
-	console.log(data);
 	return (
-		<>
-			<Navbar />
-			{data.getPosts.map((post) => {
-				return <h1 key={post.id}>{post.title}</h1>;
-			})}
-		</>
+		<Layout>
+			{loading ? (
+				<Spinner />
+			) : (
+				<Flex justify='left' width='80%' alignSelf='center'>
+					<Stack spacing={8}>
+						{data.getPosts.map((post) => {
+							return <h1 key={post.id}>{post.title}</h1>;
+						})}
+					</Stack>
+				</Flex>
+			)}
+		</Layout>
 	);
 };
 
