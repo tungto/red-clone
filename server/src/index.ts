@@ -78,7 +78,7 @@ const main = async () => {
 			store: MongoStore.create({ mongoUrl }),
 			cookie: {
 				// maxAge: 1000 * 60 * 60, // one hour
-				maxAge: 1000 * 60, // 1 min
+				maxAge: 1000 * 60 * 60, // 1 h
 				httpOnly: true, // JS front end cannot access the cookie
 				sameSite: 'lax', // todo check about this, why false not working
 				secure: __prod__,

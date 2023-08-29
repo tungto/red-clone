@@ -1,17 +1,18 @@
 import * as argon2 from 'argon2';
-import { Arg, Ctx, Mutation, Query, Resolver } from 'type-graphql';
-import { User } from '../entities/User';
-import { UserMutationResponse } from '../types/UserMutationResponse';
-import { RegisterInput } from '../types/RegisterInput';
-import { validateRegisterInput } from '../utils/validateRegisterInput';
-import { LoginInput } from '../types/LoginInput';
-import { Context } from '../types/Context';
-import { COOKIE_NAME } from '../constants';
-import { randomBytes } from 'crypto';
 import bcrypt from 'bcrypt';
-import { ForgotPasswordInput } from '../types/ForgotPasswordInput';
-import sendEmail, { INodeMailerInfo } from '../utils/sendEmail';
+import { randomBytes } from 'crypto';
+import { Arg, Ctx, Mutation, Query, Resolver } from 'type-graphql';
+import { COOKIE_NAME } from '../constants';
+import { User } from '../entities/User';
 import { TokenModel } from '../models/Token';
+import { Context } from '../types/Context';
+import { ForgotPasswordInput } from '../types/ForgotPasswordInput';
+import { LoginInput } from '../types/LoginInput';
+import { RegisterInput } from '../types/RegisterInput';
+import { ResetPasswordInput } from '../types/ResetPasswordInput';
+import { UserMutationResponse } from '../types/UserMutationResponse';
+import sendEmail, { INodeMailerInfo } from '../utils/sendEmail';
+import { validateRegisterInput } from '../utils/validateRegisterInput';
 
 @Resolver()
 export class UserResolver {
@@ -199,6 +200,11 @@ export class UserResolver {
 		return destroyResult;
 	}
 
+	/**
+	 * Forgot password
+	 * @param forgotPwInput
+	 * @returns
+	 */
 	@Mutation((_return) => Boolean)
 	async forgotPassword(
 		@Arg('forgotPwInput') forgotPwInput: ForgotPasswordInput
@@ -211,6 +217,9 @@ export class UserResolver {
 			if (!user) {
 				return true;
 			}
+
+			// * delete all existing tokens with same userId before save and send new one
+			await TokenModel.deleteMany({ userId: `${user.id}` });
 
 			// create reset token
 			const resetToken = randomBytes(32).toString('hex');
@@ -238,8 +247,8 @@ export class UserResolver {
 				from: 'toxtung@gmail.com',
 				to: forgotPwInput.email,
 				subject: 'Forgot Password Reset',
-				html: `click here to reset password: 
-			<a href="http://localhost:3000/resetPassword?token=${resetToken}&userId=${user.id}">Click here</a>`,
+				html: `Hi ${forgotPwInput.email} - click here to reset password: 
+					   <a href="http://localhost:3000/reset-password?token=${resetToken}&userId=${user.id}">Click here</a>`,
 			};
 
 			// send reset pw to email
@@ -249,6 +258,121 @@ export class UserResolver {
 			console.log(`ERROR RESET PASSWORD ${error.message}`);
 
 			return false;
+		}
+	}
+
+	/**
+	 * Reset password
+	 * @param param0
+	 * @param token
+	 * @param userId
+	 * @param resetPwInput
+	 * @returns
+	 */
+	@Mutation((_return) => UserMutationResponse)
+	async resetPassword(
+		@Ctx() { req }: Context,
+		@Arg('token') token: string,
+		@Arg('userId') userId: string,
+		@Arg('resetPwInput') resetPwInput: ResetPasswordInput
+	): Promise<UserMutationResponse> {
+		if (resetPwInput.password.length <= 2) {
+			return {
+				code: 400,
+				success: false,
+				message: 'Invalid pw',
+				errors: [
+					{
+						field: 'password',
+						message: 'Length must be greater than 2',
+					},
+				],
+			};
+		}
+
+		try {
+			// * All tokens with same userId was deleted before save new one
+			// * So we can make sure resetToken here always have only 1 value
+			const hashedResetToken = await TokenModel.findOne({ userId });
+
+			if (!hashedResetToken) {
+				return {
+					code: 400,
+					success: false,
+					message: 'Invalid token',
+					errors: [
+						{
+							field: 'token',
+							message: 'Invalid or expired password reset token',
+						},
+					],
+				};
+			}
+
+			// validate token - plain token - hashed token
+			const validToken = await bcrypt.compare(
+				token,
+				hashedResetToken.token
+			);
+
+			if (!validToken) {
+				return {
+					code: 400,
+					success: false,
+					message: 'Invalid token',
+					errors: [
+						{
+							field: 'token',
+							message: 'Tokens are not match',
+						},
+					],
+				};
+			}
+
+			console.log('userId', userId);
+			console.log('validToken', validToken);
+
+			// check if userId valid
+			const user = await User.findOneBy({ id: +userId });
+
+			if (!user) {
+				return {
+					code: 400,
+					success: false,
+					message: 'Invalid user id',
+					errors: [
+						{
+							field: 'token',
+							message: 'userId does not exist',
+						},
+					],
+				};
+			}
+
+			// if token valid => save password
+			const hashedPw = await argon2.hash(resetPwInput.password);
+			user.password = hashedPw;
+			await user.save();
+
+			// delete hashedResetToken after reset pw success
+			hashedResetToken.deleteOne();
+
+			// log user in
+			req.session.userId = user.id;
+
+			return {
+				code: 200,
+				success: true,
+				message: 'update password success!!',
+				user,
+			};
+		} catch (error) {
+			console.log(`RESET PASSWORD ERROR: ${error.message}`);
+			return {
+				code: 500,
+				message: `Internal server error ${error.message}`,
+				success: false,
+			};
 		}
 	}
 }
