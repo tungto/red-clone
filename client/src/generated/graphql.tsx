@@ -93,13 +93,24 @@ export type MutationUpdatePostArgs = {
   updatePostInput: UpdatePostInput;
 };
 
+export type PaginatedPosts = {
+  __typename?: 'PaginatedPosts';
+  cursor: Scalars['DateTime']['output'];
+  hasMore: Scalars['Boolean']['output'];
+  paginatedPosts: Array<Post>;
+  totalCount: Scalars['Float']['output'];
+};
+
 export type Post = {
   __typename?: 'Post';
   createdAt: Scalars['DateTime']['output'];
   id: Scalars['ID']['output'];
   text: Scalars['String']['output'];
+  textSnippet: Scalars['String']['output'];
   title: Scalars['String']['output'];
   updatedAt: Scalars['DateTime']['output'];
+  user: User;
+  userId: Scalars['ID']['output'];
 };
 
 export type PostMutationResponse = IMutationResponse & {
@@ -114,7 +125,7 @@ export type PostMutationResponse = IMutationResponse & {
 export type Query = {
   __typename?: 'Query';
   getPost?: Maybe<Post>;
-  getPosts?: Maybe<Array<Post>>;
+  getPosts?: Maybe<PaginatedPosts>;
   hello: Scalars['String']['output'];
   me?: Maybe<User>;
 };
@@ -122,6 +133,12 @@ export type Query = {
 
 export type QueryGetPostArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type QueryGetPostsArgs = {
+  cursor?: InputMaybe<Scalars['DateTime']['input']>;
+  limit: Scalars['Int']['input'];
 };
 
 export type RegisterInput = {
@@ -145,6 +162,7 @@ export type User = {
   createdAt: Scalars['DateTime']['output'];
   email: Scalars['String']['output'];
   id: Scalars['ID']['output'];
+  posts: Array<Post>;
   updatedAt: Scalars['DateTime']['output'];
   username: Scalars['String']['output'];
 };
@@ -206,10 +224,13 @@ export type MeQueryVariables = Exact<{ [key: string]: never; }>;
 
 export type MeQuery = { __typename?: 'Query', me?: { __typename?: 'User', id: string, username: string, email: string } | null };
 
-export type PostsQueryVariables = Exact<{ [key: string]: never; }>;
+export type PostsQueryVariables = Exact<{
+  limit: Scalars['Int']['input'];
+  cursor?: InputMaybe<Scalars['DateTime']['input']>;
+}>;
 
 
-export type PostsQuery = { __typename?: 'Query', getPosts?: Array<{ __typename?: 'Post', id: string, title: string, text: string, createdAt: any, updatedAt: any }> | null };
+export type PostsQuery = { __typename?: 'Query', getPosts?: { __typename?: 'PaginatedPosts', totalCount: number, cursor: any, hasMore: boolean, paginatedPosts: Array<{ __typename?: 'Post', id: string, title: string, text: string, textSnippet: string, createdAt: any, user: { __typename?: 'User', id: string, email: string } }> } | null };
 
 export const MutationStatusesFragmentDoc = gql`
     fragment mutationStatuses on UserMutationResponse {
@@ -441,13 +462,22 @@ export type MeQueryHookResult = ReturnType<typeof useMeQuery>;
 export type MeLazyQueryHookResult = ReturnType<typeof useMeLazyQuery>;
 export type MeQueryResult = Apollo.QueryResult<MeQuery, MeQueryVariables>;
 export const PostsDocument = gql`
-    query Posts {
-  getPosts {
-    id
-    title
-    text
-    createdAt
-    updatedAt
+    query Posts($limit: Int!, $cursor: DateTime) {
+  getPosts(limit: $limit, cursor: $cursor) {
+    totalCount
+    cursor
+    hasMore
+    paginatedPosts {
+      id
+      title
+      text
+      textSnippet
+      createdAt
+      user {
+        id
+        email
+      }
+    }
   }
 }
     `;
@@ -464,10 +494,12 @@ export const PostsDocument = gql`
  * @example
  * const { data, loading, error } = usePostsQuery({
  *   variables: {
+ *      limit: // value for 'limit'
+ *      cursor: // value for 'cursor'
  *   },
  * });
  */
-export function usePostsQuery(baseOptions?: Apollo.QueryHookOptions<PostsQuery, PostsQueryVariables>) {
+export function usePostsQuery(baseOptions: Apollo.QueryHookOptions<PostsQuery, PostsQueryVariables>) {
         const options = {...defaultOptions, ...baseOptions}
         return Apollo.useQuery<PostsQuery, PostsQueryVariables>(PostsDocument, options);
       }

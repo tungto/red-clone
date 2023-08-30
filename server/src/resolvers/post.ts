@@ -1,19 +1,24 @@
 import {
 	Arg,
+	Ctx,
 	FieldResolver,
 	ID,
+	Int,
 	Mutation,
 	Query,
 	Resolver,
 	Root,
 	UseMiddleware,
 } from 'type-graphql';
+import { FindManyOptions, LessThan } from 'typeorm';
 import { Post } from '../entities/Post';
+import { User } from '../entities/User';
 import { checkAuth } from '../middleware/checkAuth';
 import { CreatePostInput } from '../types/CreatePostInput';
+import { PaginatedPosts } from '../types/PaginatedPosts';
 import { PostMutationResponse } from '../types/PostMutationResponse';
 import { UpdatePostInput } from '../types/UpdatePostInput';
-import { User } from '../entities/User';
+import { Context } from '../types/Context';
 
 //*field resolvers - https://typegraphql.com/docs/resolvers.html#field-resolvers
 @Resolver((_of) => Post)
@@ -44,14 +49,19 @@ export class PostResolver {
 	@Mutation((_returns) => PostMutationResponse)
 	@UseMiddleware(checkAuth)
 	async createPost(
-		@Arg('createPostInput') { title, text, userId }: CreatePostInput
+		@Arg('createPostInput') { title, text }: CreatePostInput,
+		@Ctx() { req }: Context
 	): Promise<PostMutationResponse> {
 		try {
 			// check if user have permission to create post
 			// check if cookie, userId provided
 
 			//1. CREATE and SAVE POST
-			const newPost = await Post.create({ title, text, userId }).save();
+			const newPost = await Post.create({
+				title,
+				text,
+				userId: req.session.userId,
+			}).save();
 
 			return {
 				code: 201,
@@ -74,10 +84,48 @@ export class PostResolver {
 	 * Get all posts
 	 * @returns Posts
 	 */
-	@Query((_return) => [Post], { nullable: true })
-	async getPosts(): Promise<Post[] | null> {
+	@Query((_return) => PaginatedPosts, { nullable: true })
+	async getPosts(
+		@Arg('limit', (_type) => Int) limit: number,
+		@Arg('cursor', { nullable: true }) cursor?: Date
+	): Promise<PaginatedPosts | null> {
 		try {
-			return await Post.find();
+			const totalPostCount = await Post.count();
+			//  query max 100 posts
+			const realLimit = Math.min(100, limit);
+
+			// oldest post => createdAt: 2023-08-23T14:57:54.059Z,
+			let lastPost: Post = (
+				await Post.find({
+					order: { createdAt: 'ASC' },
+					take: 1,
+				})
+			)[0];
+
+			const findOptions: FindManyOptions = {
+				take: realLimit,
+				order: {
+					createdAt: 'DESC', // GET THE LATEST FIRST
+				},
+			};
+
+			if (cursor) {
+				// post created earlier than current cursor date
+				findOptions.where = { createdAt: LessThan(cursor) };
+			}
+
+			const posts = await Post.find(findOptions);
+
+			return {
+				paginatedPosts: posts,
+				totalCount: totalPostCount,
+				hasMore: cursor
+					? posts[posts.length - 1].createdAt.toString() !==
+					  lastPost.createdAt.toString()
+					: posts.length !== totalPostCount,
+				// Get the date of the current oldest post fetched on the FE
+				cursor: posts[posts.length - 1].createdAt,
+			};
 		} catch (error) {
 			console.log(`ERROR GET POSTS: `, error.message);
 			return null;
@@ -92,13 +140,9 @@ export class PostResolver {
 	@Query((_return) => Post, { nullable: true })
 	async getPost(@Arg('id', (_type) => ID) id: number): Promise<Post | null> {
 		try {
-			console.log('======');
-			console.log(id);
 			const post = await Post.findOneBy({ id });
 
 			if (post) {
-				console.log('================================');
-				console.log(post);
 				return post;
 			}
 			return null;
@@ -116,10 +160,20 @@ export class PostResolver {
 	@Mutation((_return) => PostMutationResponse, { nullable: true })
 	@UseMiddleware(checkAuth)
 	async updatePost(
-		@Arg('updatePostInput') { id, title, text }: UpdatePostInput
+		@Arg('updatePostInput') { id, title, text }: UpdatePostInput,
+		@Ctx() { req }: Context
 	): Promise<PostMutationResponse | null> {
 		try {
 			const existingPost = await Post.findOne({ where: { id } });
+
+			if (existingPost?.userId !== req.session.userId) {
+				return {
+					code: 401,
+					success: false,
+					message: 'YOU DO NOT HAVE PERMISSION TO EDIT THIS POST',
+					errors: [],
+				};
+			}
 
 			//1. Check if post existing in
 			if (existingPost) {
@@ -164,10 +218,20 @@ export class PostResolver {
 	@Mutation((_return) => PostMutationResponse, { nullable: true })
 	@UseMiddleware(checkAuth)
 	async deletePost(
-		@Arg('id') id: number
+		@Arg('id') id: number,
+		@Ctx() { req }: Context
 	): Promise<PostMutationResponse | null> {
 		try {
 			const existingPost = await Post.findOneBy({ id });
+
+			if (existingPost?.userId !== req.session.userId) {
+				return {
+					code: 401,
+					success: false,
+					message: 'YOU DO NOT HAVE PERMISSION TO EDIT THIS POST',
+					errors: [],
+				};
+			}
 
 			if (existingPost) {
 				await Post.delete(id);
@@ -195,3 +259,4 @@ export class PostResolver {
 		}
 	}
 }
+``;

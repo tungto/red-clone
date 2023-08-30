@@ -32,6 +32,12 @@ export class UserResolver {
 		return posts;
 	}
 
+	// just show email of the current user and hide other users email
+	@FieldResolver((_return) => String)
+	async email(@Root() root: User, @Ctx() { req }: Context) {
+		return root.id === req.session.userId ? root.email : '';
+	}
+
 	@Query((_return) => User, { nullable: true })
 	async me(@Ctx() { req }: Context): Promise<User | undefined | null> {
 		if (!req.session.userId) {

@@ -6,7 +6,6 @@ import {
 	Entity,
 	ManyToMany,
 	PrimaryGeneratedColumn,
-	UpdateDateColumn,
 } from 'typeorm';
 import { User } from './User';
 
@@ -36,10 +35,10 @@ export class Post extends BaseEntity {
 	text!: string;
 
 	@Field()
-	@CreateDateColumn()
+	@CreateDateColumn({ type: 'timestamptz' })
 	createdAt: Date;
 
 	@Field()
-	@UpdateDateColumn()
+	@CreateDateColumn({ type: 'timestamptz' })
 	updatedAt: Date;
 }

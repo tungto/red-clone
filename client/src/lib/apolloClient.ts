@@ -9,6 +9,7 @@ import {
 import { onError } from '@apollo/client/link/error';
 import merge from 'deepmerge';
 import isEqual from 'lodash/isEqual';
+import { Post } from '../generated/graphql';
 
 export const APOLLO_STATE_PROP_NAME = '__APOLLO_STATE__';
 
@@ -33,11 +34,47 @@ const httpLink = new HttpLink({
 	credentials: 'include', // Additional fetch() options like `credentials` or `headers`
 });
 
+/**
+ * https://www.apollographql.com/docs/react/caching/cache-configuration/
+ * @returns
+ */
 function createApolloClient() {
 	return new ApolloClient({
+		connectToDevTools: true,
 		ssrMode: typeof window === 'undefined',
 		link: from([errorLink, httpLink]),
-		cache: new InMemoryCache(),
+		cache: new InMemoryCache({
+			typePolicies: {
+				Query: {
+					fields: {
+						getPosts: {
+							keyArgs: false,
+							merge(existing, incoming) {
+								console.log('EXISTING: ', existing);
+								console.log('INCOMING: ', incoming);
+
+								let paginatedPosts: Post[] = [];
+
+								if (existing && existing.paginatedPosts) {
+									paginatedPosts = paginatedPosts.concat(
+										existing.paginatedPosts
+									);
+								}
+
+								if (incoming && incoming.paginatedPosts) {
+									paginatedPosts = paginatedPosts.concat(
+										incoming.paginatedPosts
+									);
+								}
+
+								// create object from other fields of incoming with paginatedPosts
+								return { ...incoming, paginatedPosts };
+							},
+						},
+					},
+				},
+			},
+		}),
 	});
 }
 
