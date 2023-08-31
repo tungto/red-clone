@@ -1,12 +1,14 @@
-import { Button, Flex, Spinner, Stack } from '@chakra-ui/react';
+import { Button, Flex, Spinner, Stack, Text } from '@chakra-ui/react';
 
-import { NetworkStatus } from '@apollo/client';
+import { Context, NetworkStatus } from '@apollo/client';
 import Layout from '../components/Layout';
 import PostEditDeleteBtn from '../components/PostEditDeleteBtn';
 import { PostsDocument, usePostsQuery } from '../generated/graphql';
 import { addApolloState, initializeApollo } from '../lib/apolloClient';
+import { GetStaticProps } from 'next';
+import NextLink from 'next/link';
 
-export const limit = 2;
+export const limit = 3;
 
 const Index = () => {
 	const { data, loading, fetchMore, networkStatus } = usePostsQuery({
@@ -35,8 +37,16 @@ const Index = () => {
 									justifyItems='space-between'
 									alignItems='center'
 									key={post.id}>
-									<h1>{post.title}</h1>
+									<NextLink href={`/post/${post.id}`}>
+										<h1>{post.title}</h1>
+									</NextLink>
+
 									<PostEditDeleteBtn postId={post.id} />
+									{/* for privacy should get username instead */}
+									<Text>
+										{`posted by 
+										${post.user.email || 'email hidden'}`}
+									</Text>
 								</Flex>
 							);
 						})}
@@ -59,8 +69,10 @@ const Index = () => {
 	);
 };
 
-export const getStaticProps = async () => {
+export const getStaticProps: GetStaticProps = async (context: Context) => {
 	const apolloClient = initializeApollo();
+	console.log('CONTEXT: ');
+	console.log(context);
 
 	await apolloClient.query({
 		query: PostsDocument,

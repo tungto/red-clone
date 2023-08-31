@@ -46,9 +46,14 @@ export const Navbar = () => {
 		);
 	} else {
 		body = (
-			<Button onClick={handleLogout} isLoading={logoutLoading} mr={2}>
-				Logout
-			</Button>
+			<Flex>
+				<NextLink href='/create-post'>
+					<Button mr={4}>Create Post</Button>
+				</NextLink>
+				<Button onClick={handleLogout} isLoading={logoutLoading} mr={2}>
+					Logout
+				</Button>
+			</Flex>
 		);
 	}
 

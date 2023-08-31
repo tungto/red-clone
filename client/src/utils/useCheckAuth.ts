@@ -17,6 +17,11 @@ const useCheckAuth = () => {
 		) {
 			router.push('/');
 		}
+
+		// if user not login yet, route to login page
+		if (!loading && !data?.me && router.route === '/create-post') {
+			router.push('/login');
+		}
 	}, [data, loading, router]);
 
 	return { data, loading };

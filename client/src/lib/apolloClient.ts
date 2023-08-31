@@ -15,6 +15,9 @@ export const APOLLO_STATE_PROP_NAME = '__APOLLO_STATE__';
 
 let apolloClient: ApolloClient<NormalizedCacheObject>;
 
+/**
+ * https://dev.to/ivanms1/take-your-next-js-graphql-typescript-setup-to-the-next-level-5b0i
+ */
 interface IApolloStateProps {
 	[APOLLO_STATE_PROP_NAME]?: NormalizedCacheObject;
 }
@@ -50,8 +53,8 @@ function createApolloClient() {
 						getPosts: {
 							keyArgs: false,
 							merge(existing, incoming) {
-								console.log('EXISTING: ', existing);
-								console.log('INCOMING: ', incoming);
+								// console.log('EXISTING: ', existing);
+								// console.log('INCOMING: ', incoming);
 
 								let paginatedPosts: Post[] = [];
 

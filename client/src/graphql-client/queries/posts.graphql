@@ -1,21 +1,10 @@
-query Posts(
-  $limit: Int!
-  $cursor: DateTime
-) {
-  getPosts(limit: $limit, cursor: $cursor) {
-    totalCount
-    cursor
-    hasMore
-    paginatedPosts {
-      id
-      title
-      text
-      textSnippet
-      createdAt
-      user {
-        id
-        email
-      }
-    }
-  }
+query Posts($limit: Int!, $cursor: DateTime) {
+	getPosts(limit: $limit, cursor: $cursor) {
+		totalCount
+		cursor
+		hasMore
+		paginatedPosts {
+			...postWithUserInfo
+		}
+	}
 }

@@ -1,0 +1,7 @@
+query PostIds($limit: Int!, $cursor: DateTime) {
+	getPosts(limit: $limit, cursor: $cursor) {
+		paginatedPosts {
+			id
+		}
+	}
+}
