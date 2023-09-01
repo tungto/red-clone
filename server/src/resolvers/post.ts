@@ -218,7 +218,7 @@ export class PostResolver {
 	@Mutation((_return) => PostMutationResponse, { nullable: true })
 	@UseMiddleware(checkAuth)
 	async deletePost(
-		@Arg('id') id: number,
+		@Arg('id', (_type) => ID) id: number,
 		@Ctx() { req }: Context
 	): Promise<PostMutationResponse | null> {
 		try {

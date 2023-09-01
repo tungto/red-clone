@@ -1,7 +1,9 @@
-import { Box, Button, Spinner } from '@chakra-ui/react';
+import { Box, Button, Flex, Spinner } from '@chakra-ui/react';
 import { GetStaticPaths, GetStaticProps } from 'next';
+import NextLink from 'next/link';
 import { useRouter } from 'next/router';
 import Layout from '../../components/Layout';
+import PostEditDeleteBtn from '../../components/PostEditDeleteBtn';
 import {
 	PostDocument,
 	PostIdsDocument,
@@ -11,7 +13,6 @@ import {
 } from '../../generated/graphql';
 import { addApolloState, initializeApollo } from '../../lib/apolloClient';
 import { limit } from '../index';
-import NextLink from 'next/link';
 
 const Post = () => {
 	const router = useRouter();
@@ -43,11 +44,20 @@ const Post = () => {
 	return (
 		<Layout>
 			<Box>
-				<h1>{data.getPost.title}</h1>
-				<p>{data.getPost.text}</p>
-				<Button>
-					<NextLink href='/'>Back to homepage</NextLink>
-				</Button>
+				<Box mb={10}>
+					<h1>{data.getPost.title}</h1>
+					<p>{data.getPost.text}</p>
+				</Box>
+				<Flex>
+					<PostEditDeleteBtn
+						postId={data.getPost.id}
+						userId={data.getPost?.user.id}
+					/>
+
+					<NextLink href='/'>
+						<Button ml={4}>Back to homepage</Button>
+					</NextLink>
+				</Flex>
 			</Box>
 		</Layout>
 	);
@@ -74,8 +84,6 @@ export const getStaticPaths: GetStaticPaths = async () => {
 		};
 	});
 
-	console.log('GET STATIC PATH DATA: ', data.getPosts.paginatedPosts, paths);
-
 	return {
 		paths,
 		fallback: 'blocking', // false or "blocking"
@@ -85,14 +93,10 @@ export const getStaticPaths: GetStaticPaths = async () => {
 export const getStaticProps: GetStaticProps = async ({ params }) => {
 	const apolloClient = initializeApollo();
 
-	console.log('PARAMS: ', params);
-
-	const post = await apolloClient.query<PostQuery>({
+	await apolloClient.query<PostQuery>({
 		query: PostDocument,
 		variables: { id: params?.id },
 	});
-
-	console.log('POST: ', post);
 
 	return addApolloState(apolloClient, {
 		props: {},
