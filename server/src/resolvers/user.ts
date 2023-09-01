@@ -54,7 +54,7 @@ export class UserResolver {
 	 * @param registerInput
 	 * @returns
 	 */
-	@Mutation((_returns) => UserMutationResponse, { nullable: true })
+	@Mutation((_return) => UserMutationResponse, { nullable: true })
 	async register(
 		@Arg('registerInput') registerInput: RegisterInput,
 		@Ctx() { req }: Context
@@ -135,7 +135,7 @@ export class UserResolver {
 	 * @param loginInput
 	 * @returns
 	 */
-	@Mutation((_returns) => UserMutationResponse)
+	@Mutation((_return) => UserMutationResponse)
 	async login(
 		@Arg('loginInput') loginInput: LoginInput,
 		@Ctx() { req }: Context
@@ -203,7 +203,7 @@ export class UserResolver {
 	 * @param param0
 	 * @returns boolean
 	 */
-	@Mutation((_returns) => Boolean)
+	@Mutation((_return) => Boolean)
 	async logout(@Ctx() { req, res }: Context): Promise<boolean> {
 		// 1. Clear cookie
 		res.clearCookie(COOKIE_NAME);

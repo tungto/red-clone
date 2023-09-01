@@ -4,10 +4,12 @@ import {
 	Column,
 	CreateDateColumn,
 	Entity,
-	ManyToMany,
+	ManyToOne,
+	OneToMany,
 	PrimaryGeneratedColumn,
 } from 'typeorm';
 import { User } from './User';
+import { Upvote } from './UpVote';
 
 // turn entity to object type
 @ObjectType()
@@ -26,9 +28,19 @@ export class Post extends BaseEntity {
 	userId!: number;
 
 	//https://orkhan.gitbook.io/typeorm/docs/many-to-one-one-to-many-relations
-	@Field()
-	@ManyToMany(() => User, (user) => user.posts)
+	@Field((_type) => User)
+	@ManyToOne(() => User, (user) => user.posts)
 	user: User;
+
+	@Field()
+	voteType!: number;
+
+	@OneToMany((_to) => Upvote, (upvote) => upvote.post)
+	upvotes: Upvote[];
+
+	@Field()
+	@Column({ default: 0 })
+	points!: number;
 
 	@Field()
 	@Column()

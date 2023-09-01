@@ -19,6 +19,7 @@ import { HelloResolver } from './resolvers/hello';
 import { PostResolver } from './resolvers/post';
 import { UserResolver } from './resolvers/user';
 import { Context } from './types/Context';
+import { Upvote } from './entities/UpVote';
 
 configDotenv();
 const option: DataSourceOptions = {
@@ -28,13 +29,13 @@ const option: DataSourceOptions = {
 	password: process.env.DB_PASSWORD_DEV,
 	logging: true,
 	synchronize: true,
-	entities: [User, Post],
+	entities: [User, Post, Upvote],
 };
 const appDataSource = new DataSource(option);
 
 const main = async () => {
 	console.time('main');
-	await appDataSource.initialize();
+	const connection = await appDataSource.initialize();
 
 	const app = express();
 
@@ -96,7 +97,11 @@ const main = async () => {
 			validate: false,
 		}),
 
-		context: ({ req, res }): Context => ({ req, res }),
+		context: ({ req, res }): Context => ({
+			req,
+			res,
+			connection,
+		}),
 		plugins: [
 			ApolloServerPluginLandingPageGraphQLPlayground({
 				settings: {
