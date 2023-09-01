@@ -9,18 +9,24 @@ import {
 	useMeQuery,
 } from '../generated/graphql';
 
+export type PostsCacheObject = Pick<
+	PaginatedPosts,
+	'__typename' | 'cursor' | 'hasMore' | 'totalCount'
+> & {
+	paginatedPosts: Reference[];
+};
+
 const PostEditDeleteBtn = ({ postId, userId }) => {
 	const [deletePost, {}] = useDeletePostMutation();
-
+	const { data: meData } = useMeQuery();
 	const router = useRouter();
-
-	const onEditPost = () => {};
 
 	const onDeletePost = async () => {
 		await deletePost({
 			variables: { id: postId },
 			update(cache, { data }) {
 				if (data?.deletePost.success) {
+					// * using modify instead of query new data
 					// cache.writeQuery<PostsQuery>({
 					// 	query: PostsDocument,
 					// 	data: {
@@ -30,17 +36,7 @@ const PostEditDeleteBtn = ({ postId, userId }) => {
 
 					cache.modify({
 						fields: {
-							getPosts(
-								existing: Pick<
-									PaginatedPosts,
-									| '__typename'
-									| 'cursor'
-									| 'hasMore'
-									| 'totalCount'
-								> & {
-									paginatedPosts: Reference[];
-								}
-							) {
+							getPosts(existing: PostsCacheObject) {
 								const newPostsAfterDeletion = {
 									...existing,
 									totalCount: existing.totalCount - 1,
@@ -66,8 +62,6 @@ const PostEditDeleteBtn = ({ postId, userId }) => {
 		if (router.route !== '/') router.push('/');
 	};
 
-	const { data: meData } = useMeQuery();
-
 	if (meData?.me?.id !== userId) {
 		return null;
 	}
@@ -75,12 +69,7 @@ const PostEditDeleteBtn = ({ postId, userId }) => {
 	return (
 		<Box>
 			<NextLink href={`/post/edit/${postId}`}>
-				<IconButton
-					icon={<EditIcon />}
-					aria-label='Edit'
-					mr={4}
-					onClick={onEditPost}
-				/>
+				<IconButton icon={<EditIcon />} aria-label='Edit' mr={4} />
 			</NextLink>
 
 			<IconButton

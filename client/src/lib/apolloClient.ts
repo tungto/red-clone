@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import {
 	ApolloClient,
 	HttpLink,
@@ -9,7 +8,8 @@ import {
 import { onError } from '@apollo/client/link/error';
 import merge from 'deepmerge';
 import isEqual from 'lodash/isEqual';
-import { Post } from '../generated/graphql';
+import { useMemo } from 'react';
+import { PaginatedPosts, Post } from '../generated/graphql';
 
 export const APOLLO_STATE_PROP_NAME = '__APOLLO_STATE__';
 
@@ -48,13 +48,30 @@ function createApolloClient() {
 		link: from([errorLink, httpLink]),
 		cache: new InMemoryCache({
 			typePolicies: {
+				Mutation: {
+					fields: {
+						createPost: {
+							keyArgs: false,
+							merge(
+								existing: PaginatedPosts,
+								incoming: PaginatedPosts
+							) {
+								console.log('Cache - typePolicies - Mutation');
+								console.log(existing, incoming);
+							},
+						},
+					},
+				},
 				Query: {
 					fields: {
 						getPosts: {
 							keyArgs: false,
-							merge(existing, incoming) {
-								// console.log('EXISTING: ', existing);
-								// console.log('INCOMING: ', incoming);
+							merge(
+								existing: PaginatedPosts,
+								incoming: PaginatedPosts
+							) {
+								console.log('EXISTING: ', existing);
+								console.log('INCOMING: ', incoming);
 
 								let paginatedPosts: Post[] = [];
 
@@ -71,7 +88,10 @@ function createApolloClient() {
 								}
 
 								// create object from other fields of incoming with paginatedPosts
-								return { ...incoming, paginatedPosts };
+								return {
+									...incoming,
+									paginatedPosts,
+								};
 							},
 						},
 					},

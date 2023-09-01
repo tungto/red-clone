@@ -22,6 +22,37 @@ const CreatePost = () => {
 			variables: {
 				createPostInput: values,
 			},
+
+			update(cache, { data }) {
+				// Fixed wrong cursor when create new post => cause duplicate post
+				cache.modify({
+					fields: {
+						getPosts(existing) {
+							if (
+								data?.createPost.success &&
+								data.createPost.post
+							) {
+								const newPostRef = cache.identify(
+									data.createPost.post
+								);
+
+								const newPostsAfterCreation = {
+									...existing,
+									totalCount: existing.totalCount + 1,
+									paginatedPosts: [
+										{
+											__ref: newPostRef,
+											...existing.paginatedPost,
+										},
+									],
+								};
+
+								return newPostsAfterCreation;
+							}
+						},
+					},
+				});
+			},
 		});
 
 		if (response.data?.createPost.success) {
