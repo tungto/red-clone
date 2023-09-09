@@ -37,26 +37,34 @@ export class PostResolver {
 	}
 
 	@FieldResolver((_return) => User, { nullable: true })
-	async user(@Root() root: Post) {
-		const userId = root.userId;
-
-		const user = await User.findOneBy({ id: userId });
-
+	async user(
+		@Root() root: Post,
+		@Ctx() { dataLoaders: { userLoader } }: Context
+	) {
+		// const user = await User.findOneBy({ id: userId });
+		const user = await userLoader.load(root.userId);
 		if (!user) {
 			return null;
 		}
-
 		return user;
 	}
 
 	@FieldResolver((_return) => Int)
-	async voteType(@Root() root: Post, @Ctx() { req }: Context) {
+	async voteType(
+		@Root() root: Post,
+		@Ctx() { req, dataLoaders: { voteTypeLoader } }: Context
+	) {
 		// if voted or anonymous user => 0
-		const existingVote = await Upvote.findOne({
-			where: {
-				userId: req?.session?.userId,
-				postId: root.id,
-			},
+		// const existingVote = await Upvote.findOne({
+		// 	where: {
+		// 		userId: req?.session?.userId,
+		// 		postId: root.id,
+		// 	},
+		// });
+
+		const existingVote = await voteTypeLoader.load({
+			userId: req.session.userId!,
+			postId: root.id,
 		});
 
 		if (!existingVote || !req.session.userId) {

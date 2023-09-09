@@ -20,6 +20,7 @@ import { PostResolver } from './resolvers/post';
 import { UserResolver } from './resolvers/user';
 import { Context } from './types/Context';
 import { Upvote } from './entities/UpVote';
+import { buildDataLoaders } from './utils/dataLoaders';
 
 configDotenv();
 const option: DataSourceOptions = {
@@ -98,6 +99,7 @@ const main = async () => {
 			req,
 			res,
 			connection,
+			dataLoaders: buildDataLoaders(),
 		}),
 		plugins: [
 			ApolloServerPluginLandingPageGraphQLPlayground({
