@@ -19,7 +19,7 @@ import { HelloResolver } from './resolvers/hello';
 import { PostResolver } from './resolvers/post';
 import { UserResolver } from './resolvers/user';
 import { Context } from './types/Context';
-import { Upvote } from './entities/UpVote';
+import { Upvote } from './entities/Upvote';
 import { buildDataLoaders } from './utils/dataLoaders';
 
 configDotenv();

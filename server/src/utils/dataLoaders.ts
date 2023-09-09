@@ -1,7 +1,7 @@
 import DataLoader from 'dataloader';
 import { User } from '../entities/User';
 import { In } from 'typeorm';
-import { Upvote } from '../entities/UpVote';
+import { Upvote } from '../entities/Upvote';
 
 interface VoteTypeCondition {
 	userId: number;

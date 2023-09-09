@@ -9,7 +9,7 @@ import {
 	PrimaryGeneratedColumn,
 } from 'typeorm';
 import { User } from './User';
-import { Upvote } from './UpVote';
+import { Upvote } from './Upvote';
 
 // turn entity to object type
 @ObjectType()

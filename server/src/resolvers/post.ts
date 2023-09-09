@@ -22,7 +22,7 @@ import { UpdatePostInput } from '../types/UpdatePostInput';
 import { Context } from '../types/Context';
 import { VoteType } from '../types/VoteType';
 import { UserInputError } from 'apollo-server-core';
-import { Upvote } from '../entities/UpVote';
+import { Upvote } from '../entities/Upvote';
 
 registerEnumType(VoteType, {
 	name: 'VoteType', // this is mandatory
