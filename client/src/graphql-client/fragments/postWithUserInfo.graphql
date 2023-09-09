@@ -4,6 +4,8 @@ fragment postWithUserInfo on Post {
 	text
 	textSnippet
 	createdAt
+	points
+	voteType
 	user {
 		id
 		email

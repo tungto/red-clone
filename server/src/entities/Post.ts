@@ -32,6 +32,7 @@ export class Post extends BaseEntity {
 	@ManyToOne(() => User, (user) => user.posts)
 	user: User;
 
+	//Check if current user voted or not
 	@Field()
 	voteType!: number;
 

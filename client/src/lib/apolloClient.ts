@@ -10,9 +10,17 @@ import merge from 'deepmerge';
 import isEqual from 'lodash/isEqual';
 import { useMemo } from 'react';
 import { PaginatedPosts, Post } from '../generated/graphql';
+import { IncomingHttpHeaders } from 'http';
+import fetch from 'isomorphic-unfetch';
+import Router from 'next/router';
 
 export const APOLLO_STATE_PROP_NAME = '__APOLLO_STATE__';
+export const UNAUTHENTICATED_ERROR_CODE = 'UNAUTHENTICATED';
 
+type InitializeObject = {
+	initialState?: NormalizedCacheObject | null;
+	headers?: IncomingHttpHeaders | null;
+};
 let apolloClient: ApolloClient<NormalizedCacheObject>;
 
 /**
@@ -22,26 +30,52 @@ interface IApolloStateProps {
 	[APOLLO_STATE_PROP_NAME]?: NormalizedCacheObject;
 }
 
-const errorLink = onError(({ graphQLErrors, networkError }) => {
+const errorLink = onError(({ graphQLErrors, networkError, response }) => {
 	if (graphQLErrors)
-		graphQLErrors.forEach(({ message, locations, path }) =>
+		graphQLErrors.forEach(({ message, locations, path, extensions }) => {
 			console.log(
 				`[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`
-			)
-		);
-	if (networkError) console.log(`[Network error]: ${networkError}`);
-});
+			);
 
-const httpLink = new HttpLink({
-	uri: 'http://localhost:4000/graphql', // Server URL (must be absolute)
-	credentials: 'include', // Additional fetch() options like `credentials` or `headers`
+			if (
+				extensions?.code === UNAUTHENTICATED_ERROR_CODE &&
+				response.errors
+			) {
+				// to hide the error
+				response.errors = undefined;
+				Router.replace('/login');
+			}
+		});
+
+	if (networkError) console.log(`[Network error]: ${networkError}`);
 });
 
 /**
  * https://www.apollographql.com/docs/react/caching/cache-configuration/
  * @returns
  */
-function createApolloClient() {
+function createApolloClient(headers: IncomingHttpHeaders | null = null) {
+	// source: https://www.rockyourcode.com/nextjs-with-apollo-ssr-cookies-and-typescript/
+	// isomorphic fetch for passing the cookies along with each GraphQL request
+	const enhanceFetch = async (url: RequestInfo, init: RequestInit) => {
+		const response = await fetch(url, {
+			...init,
+			headers: {
+				...init.headers,
+				'Access-Control-Allow-Origin': '*',
+				Cookie: headers?.cookie ?? '',
+			},
+		});
+
+		return response;
+	};
+
+	const httpLink = new HttpLink({
+		uri: 'http://localhost:4000/graphql', // Server URL (must be absolute)
+		credentials: 'include', // Additional fetch() options like `credentials` or `headers`,
+		fetch: enhanceFetch,
+	});
+
 	return new ApolloClient({
 		connectToDevTools: true,
 		ssrMode: typeof window === 'undefined',
@@ -70,8 +104,8 @@ function createApolloClient() {
 								existing: PaginatedPosts,
 								incoming: PaginatedPosts
 							) {
-								console.log('EXISTING: ', existing);
-								console.log('INCOMING: ', incoming);
+								// console.log('EXISTING: ', existing);
+								// console.log('INCOMING: ', incoming);
 
 								let paginatedPosts: Post[] = [];
 
@@ -102,9 +136,12 @@ function createApolloClient() {
 }
 
 export function initializeApollo(
-	initialState: NormalizedCacheObject | null = null
+	{ headers, initialState }: InitializeObject = {
+		headers: null,
+		initialState: null,
+	}
 ) {
-	const _apolloClient = apolloClient ?? createApolloClient();
+	const _apolloClient = apolloClient ?? createApolloClient(headers);
 
 	// If your page has Next.js data fetching methods that use Apollo Client, the initial state
 	// gets hydrated here
@@ -147,6 +184,9 @@ export function addApolloState(
 
 export function useApollo(pageProps: IApolloStateProps) {
 	const state = pageProps[APOLLO_STATE_PROP_NAME];
-	const store = useMemo(() => initializeApollo(state), [state]);
+	const store = useMemo(
+		() => initializeApollo({ initialState: state }),
+		[state]
+	);
 	return store;
 }

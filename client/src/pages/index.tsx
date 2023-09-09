@@ -8,11 +8,12 @@ import {
 	Text,
 } from '@chakra-ui/react';
 
-import { Context, NetworkStatus } from '@apollo/client';
-import { GetStaticProps } from 'next';
+import { NetworkStatus } from '@apollo/client';
+import { GetServerSideProps, GetServerSidePropsContext } from 'next';
 import NextLink from 'next/link';
 import Layout from '../components/Layout';
 import PostEditDeleteBtn from '../components/PostEditDeleteBtn';
+import UpVoteSection from '../components/UpvoteSection';
 import { PostsDocument, usePostsQuery } from '../generated/graphql';
 import { addApolloState, initializeApollo } from '../lib/apolloClient';
 
@@ -32,6 +33,8 @@ const Index = () => {
 		fetchMore({ variables: { cursor: data?.getPosts?.cursor } });
 	};
 
+	console.log(`index data: `, data);
+
 	return (
 		<Layout>
 			{loading && !loadingMorePosts ? (
@@ -46,6 +49,7 @@ const Index = () => {
 									p={5}
 									shadow='md'
 									borderWidth='1px'>
+									<UpVoteSection post={post} />
 									<Box flex={1}>
 										<NextLink href={`/post/${post.id}`}>
 											<Heading fontSize='xl'>
@@ -87,10 +91,11 @@ const Index = () => {
 	);
 };
 
-export const getStaticProps: GetStaticProps = async (context: Context) => {
-	const apolloClient = initializeApollo();
-	console.log('CONTEXT: ');
-	console.log(context);
+export const getServerSideProps: GetServerSideProps = async (
+	context: GetServerSidePropsContext
+) => {
+	const apolloClient = initializeApollo({ headers: context.req.headers });
+	// console.log('CONTEXT.REQ.HEADERS: ', context.req.headers);
 
 	await apolloClient.query({
 		query: PostsDocument,
@@ -103,5 +108,28 @@ export const getStaticProps: GetStaticProps = async (context: Context) => {
 		props: {},
 	});
 };
+
+/**
+ * Will get issue cookie doesn't send on when the page load => voteType get undefined (don't know if posts voted or not)
+ * To fixed this issue, we use getServerSideProps to pass cookie on each request
+ * https://www.rockyourcode.com/nextjs-with-apollo-ssr-cookies-and-typescript/
+ */
+// export const getStaticProps: GetStaticProps = async (
+// 	context: GetStaticPropsContext
+// ) => {
+// 	const apolloClient = initializeApollo();
+// 	console.log('CONTEXT: ', context);
+
+// 	await apolloClient.query({
+// 		query: PostsDocument,
+// 		variables: {
+// 			limit,
+// 		},
+// 	});
+
+// 	return addApolloState(apolloClient, {
+// 		props: {},
+// 	});
+// };
 
 export default Index;

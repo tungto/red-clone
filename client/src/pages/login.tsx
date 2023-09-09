@@ -57,7 +57,7 @@ const Login = () => {
 				title: 'Account created.',
 				description: `We've created your account for ${response.data?.login.user.username}.`,
 				status: 'success',
-				duration: 9000,
+				duration: 3000,
 				isClosable: true,
 			});
 			router.push('/');

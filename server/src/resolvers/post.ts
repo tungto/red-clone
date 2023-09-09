@@ -49,6 +49,24 @@ export class PostResolver {
 		return user;
 	}
 
+	@FieldResolver((_return) => Int)
+	async voteType(@Root() root: Post, @Ctx() { req }: Context) {
+		// if voted or anonymous user => 0
+		const existingVote = await Upvote.findOne({
+			where: {
+				userId: req?.session?.userId,
+				postId: root.id,
+			},
+		});
+
+		if (!existingVote || !req.session.userId) {
+			return 0;
+		}
+		// else => 1
+
+		return existingVote.value;
+	}
+
 	/**
 	 * CREATE POST
 	 * @param param0

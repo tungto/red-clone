@@ -1,12 +1,14 @@
+import { gql } from '@apollo/client';
 import { Box, Button, Flex, Heading, Link } from '@chakra-ui/react';
 import NextLink from 'next/link';
+import { ReactElement } from 'react';
 import {
 	MeDocument,
 	MeQuery,
 	useLogoutMutation,
 	useMeQuery,
 } from '../generated/graphql';
-import { ReactElement } from 'react';
+import { PostsCacheObject } from './PostEditDeleteBtn';
 
 export const Navbar = () => {
 	const { data, loading: meLoading } = useMeQuery();
@@ -25,6 +27,37 @@ export const Navbar = () => {
 						query: MeDocument,
 						data: { me: null },
 					});
+
+					cache.modify({
+						fields: {
+							getPosts(existing: PostsCacheObject) {
+								console.log(
+									`EXISTING CURSOR: `,
+									existing.cursor
+								);
+								existing.paginatedPosts.forEach((post) => {
+									cache.writeFragment({
+										id: post.__ref,
+										fragment: gql`
+											fragment VoteType on Post {
+												voteType
+											}
+										`,
+										data: {
+											voteType: 0,
+										},
+									});
+								});
+
+								return existing;
+							},
+						},
+					});
+
+					// cache.writeQuery<PostsQuery>({
+					// 	query: PostsDocument,
+					// 	data: { getPosts: null },
+					// });
 				}
 			},
 		});
@@ -36,11 +69,10 @@ export const Navbar = () => {
 		body = (
 			<>
 				<Link as={NextLink} mr={2} href='/login'>
-					Login
+					<Button>Login</Button>
 				</Link>
-
 				<Link as={NextLink} mr={2} href='/register'>
-					Register
+					<Button>Register</Button>
 				</Link>
 			</>
 		);

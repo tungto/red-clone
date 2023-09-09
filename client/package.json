@@ -16,6 +16,7 @@
     "formik": "^2.4.3",
     "framer-motion": "^6.3.0",
     "graphql": "^16.8.0",
+    "isomorphic-unfetch": "^4.0.2",
     "next": "latest",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"

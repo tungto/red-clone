@@ -59,10 +59,7 @@ const main = async () => {
 	);
 
 	//connect mongoose
-	await mongoose.connect(mongoUrl!, {
-		useNewUrlParser: true,
-		useUnifiedTopology: true,
-	});
+	await mongoose.connect(mongoUrl!);
 
 	console.log(
 		'COOKIE_NAME',
