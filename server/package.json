@@ -4,6 +4,7 @@
 	"main": "index.js",
 	"license": "MIT",
 	"scripts": {
+		"build": "rm -rf dist && tsc",
 		"start:build": "tsc -w",
 		"start:run": "nodemon dist/index.js",
 		"start": "concurrently yarn:start:*",

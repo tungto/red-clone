@@ -27,11 +27,23 @@ configDotenv();
 
 const appDataSource = new DataSource({
 	type: 'postgres',
-	database: 'reddit',
-	username: process.env.DB_USERNAME_DEV,
-	password: process.env.DB_PASSWORD_DEV,
+	...(__prod__
+		? { url: process.env.DATABASE_URL }
+		: {
+				database: 'reddit',
+				username: process.env.DB_USERNAME_DEV,
+				password: process.env.DB_PASSWORD_DEV,
+		  }),
 	logging: true,
-	synchronize: true,
+	...(__prod__
+		? {
+				extra: {
+					ssl: { rejectUnauthorized: false },
+				},
+				ssl: true,
+		  }
+		: {}),
+	...(__prod__ ? {} : { synchronize: true }),
 	entities: [User, Post, Upvote],
 	migrations: [path.join(__dirname, '/migrations/*')],
 });
@@ -40,12 +52,18 @@ const main = async () => {
 	console.time('main');
 	const dataSource = await appDataSource.initialize();
 
+	if (__prod__) {
+		await dataSource.runMigrations();
+	}
+
 	const app = express();
 
 	//cors
 	app.use(
 		cors({
-			origin: 'http://localhost:3000',
+			origin: __prod__
+				? process.env.CORS_ORIGIN_PROD
+				: process.env.CORS_ORIGIN_DEV,
 			credentials: true,
 		})
 	);
@@ -56,22 +74,13 @@ const main = async () => {
 	// parse request
 	app.use(express.json());
 
-	const mongoUrl = process.env.SESSION_DB_MONGO_URI?.replace(
-		'<password>',
-		process.env.SESSION_DB_MONGO_PASSWORD!
-	);
+	// * Better if separate DEV and PROD, use only one here for convenience
+	const mongoUrl = `mongodb+srv://${process.env.SESSION_DB_MONGO_USERNAME}:${process.env.SESSION_DB_MONGO_PASSWORD}@cluster0.vh93vvy.mongodb.net/?retryWrites=true&w=majority`;
 
 	//connect mongoose
 	await mongoose.connect(mongoUrl!);
 
-	console.log(
-		'COOKIE_NAME',
-		COOKIE_NAME,
-		__prod__,
-		process.env.SESSION_COOKIE_SECRET
-	);
-
-	console.log('MongoDB Connected');
+	console.log('MongoDB Connected!');
 
 	app.use(
 		session({
@@ -83,6 +92,7 @@ const main = async () => {
 				httpOnly: true, // JS front end cannot access the cookie
 				sameSite: 'lax', // todo check about this, why false not working
 				secure: __prod__,
+				domain: __prod__ ? '.vercel.app' : undefined,
 			},
 			secret: process.env.SESSION_COOKIE_SECRET as string,
 			saveUninitialized: false, // don't save empty sessions, right from the start
