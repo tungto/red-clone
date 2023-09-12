@@ -6,7 +6,8 @@
 	"scripts": {
 		"start:build": "tsc -w",
 		"start:run": "nodemon dist/index.js",
-		"start": "concurrently yarn:start:*"
+		"start": "concurrently yarn:start:*",
+		"typeorm": "typeorm-ts-node-commonjs"
 	},
 	"devDependencies": {
 		"@types/bcrypt": "^5.0.0",

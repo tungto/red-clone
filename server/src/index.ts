@@ -11,19 +11,21 @@ import mongoose from 'mongoose';
 import morgan from 'morgan';
 import 'reflect-metadata';
 import { buildSchema } from 'type-graphql';
-import { DataSource, DataSourceOptions } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { COOKIE_NAME, __prod__ } from './constants';
 import { Post } from './entities/Post';
+import { Upvote } from './entities/Upvote';
 import { User } from './entities/User';
 import { HelloResolver } from './resolvers/hello';
 import { PostResolver } from './resolvers/post';
 import { UserResolver } from './resolvers/user';
 import { Context } from './types/Context';
-import { Upvote } from './entities/Upvote';
 import { buildDataLoaders } from './utils/dataLoaders';
+import path from 'path';
 
 configDotenv();
-const option: DataSourceOptions = {
+
+const appDataSource = new DataSource({
 	type: 'postgres',
 	database: 'reddit',
 	username: process.env.DB_USERNAME_DEV,
@@ -31,12 +33,12 @@ const option: DataSourceOptions = {
 	logging: true,
 	synchronize: true,
 	entities: [User, Post, Upvote],
-};
-const appDataSource = new DataSource(option);
+	migrations: [path.join(__dirname, '/migrations/*')],
+});
 
 const main = async () => {
 	console.time('main');
-	const connection = await appDataSource.initialize();
+	const dataSource = await appDataSource.initialize();
 
 	const app = express();
 
@@ -98,7 +100,7 @@ const main = async () => {
 		context: ({ req, res }): Context => ({
 			req,
 			res,
-			connection,
+			connection: dataSource,
 			dataLoaders: buildDataLoaders(),
 		}),
 		plugins: [
