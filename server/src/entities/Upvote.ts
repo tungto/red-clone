@@ -10,10 +10,10 @@ export class Upvote extends BaseEntity {
 	@PrimaryColumn()
 	postId!: number;
 
-	@ManyToOne((_to) => Post, (post) => post.upvotes)
+	@ManyToOne((_to) => Post, (post) => post.upVotes)
 	post: Post;
 
-	@ManyToOne((_to) => User, (user) => user.upvotes)
+	@ManyToOne((_to) => User, (user) => user.upVotes)
 	user: User;
 
 	@Column()
