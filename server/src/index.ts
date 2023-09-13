@@ -28,7 +28,12 @@ configDotenv();
 const appDataSource = new DataSource({
 	type: 'postgres',
 	...(__prod__
-		? { url: process.env.DATABASE_URL }
+		? {
+				url: process.env.DB_URL_PROD,
+				database: process.env.DB_NAME,
+				username: process.env.DB_USERNAME_PROD,
+				password: process.env.DB_PASSWORD_PROD,
+		  }
 		: {
 				database: 'reddit',
 				username: process.env.DB_USERNAME_DEV,

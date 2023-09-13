@@ -9,7 +9,6 @@ RUN yarn
 
 COPY . .
 
-
 RUN yarn build
 
 RUN NODE_ENV=production
