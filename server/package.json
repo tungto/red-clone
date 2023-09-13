@@ -5,9 +5,10 @@
 	"license": "MIT",
 	"scripts": {
 		"build": "rm -rf dist && tsc",
+		"start": "node dist/index.js",
 		"start:build": "tsc -w",
 		"start:run": "nodemon dist/index.js",
-		"start": "concurrently yarn:start:*",
+		"dev": "concurrently yarn:start:*",
 		"typeorm": "typeorm-ts-node-commonjs"
 	},
 	"devDependencies": {
