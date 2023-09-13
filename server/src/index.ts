@@ -25,6 +25,36 @@ import path from 'path';
 
 configDotenv();
 
+console.log('================================================___PROD____');
+console.log(__prod__);
+console.log({
+	type: 'postgres',
+	...(__prod__
+		? {
+				url: process.env.DB_URL_PROD,
+				database: process.env.DB_NAME,
+				username: process.env.DB_USERNAME_PROD,
+				password: process.env.DB_PASSWORD_PROD,
+		  }
+		: {
+				database: 'reddit',
+				username: process.env.DB_USERNAME_DEV,
+				password: process.env.DB_PASSWORD_DEV,
+		  }),
+	logging: true,
+	...(__prod__
+		? {
+				extra: {
+					ssl: { rejectUnauthorized: false },
+				},
+				ssl: true,
+		  }
+		: {}),
+	...(__prod__ ? {} : { synchronize: true }),
+	entities: [User, Post, Upvote],
+	migrations: [path.join(__dirname, '/migrations/*')],
+});
+
 const appDataSource = new DataSource({
 	type: 'postgres',
 	...(__prod__
