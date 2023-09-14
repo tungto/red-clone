@@ -60,7 +60,7 @@ const appDataSource = new DataSource({
 	...(__prod__
 		? {
 				url: process.env.DB_URL_PROD,
-				database: process.env.DB_NAME,
+				database: process.env.DB_NAME_PROD,
 				username: process.env.DB_USERNAME_PROD,
 				password: process.env.DB_PASSWORD_PROD,
 		  }
@@ -141,7 +141,7 @@ const main = async () => {
 			resolvers: [UserResolver, HelloResolver, PostResolver],
 			validate: false,
 		}),
-
+		persistedQueries: false,
 		context: ({ req, res }): Context => ({
 			req,
 			res,
