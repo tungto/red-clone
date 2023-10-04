@@ -15,4 +15,4 @@ RUN NODE_ENV=production
 
 USER node 
 
-CMD [ "node", "dist/index.js" ]
+CMD [ "node", "./dist/index.js" ]
