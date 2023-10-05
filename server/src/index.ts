@@ -1,7 +1,5 @@
 require('source-map-support').install();
 
-import { ApolloServerPluginLandingPageGraphQLPlayground } from 'apollo-server-core';
-import { ApolloServer } from 'apollo-server-express';
 import MongoStore from 'connect-mongo';
 import cors from 'cors';
 import { configDotenv } from 'dotenv';
@@ -22,38 +20,19 @@ import { UserResolver } from './resolvers/user';
 import { Context } from './types/Context';
 import { buildDataLoaders } from './utils/dataLoaders';
 import path from 'path';
+import { ApolloServer } from '@apollo/server';
+import pkg from 'body-parser';
+import { expressMiddleware } from '@apollo/server/express4';
+import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
+import http from 'http';
+import {
+	ApolloServerPluginLandingPageLocalDefault,
+	ApolloServerPluginLandingPageProductionDefault,
+} from '@apollo/server/plugin/landingPage/default';
+
+const { json } = pkg;
 
 configDotenv();
-
-console.log('================================================___PROD____');
-console.log(__prod__);
-console.log({
-	type: 'postgres',
-	...(__prod__
-		? {
-				url: process.env.DB_URL_PROD,
-				database: process.env.DB_NAME,
-				username: process.env.DB_USERNAME_PROD,
-				password: process.env.DB_PASSWORD_PROD,
-		  }
-		: {
-				database: 'reddit',
-				username: process.env.DB_USERNAME_DEV,
-				password: process.env.DB_PASSWORD_DEV,
-		  }),
-	logging: true,
-	...(__prod__
-		? {
-				extra: {
-					ssl: { rejectUnauthorized: false },
-				},
-				ssl: true,
-		  }
-		: {}),
-	...(__prod__ ? {} : { synchronize: true }),
-	entities: [User, Post, Upvote],
-	migrations: [path.join(__dirname, '/migrations/*')],
-});
 
 const appDataSource = new DataSource({
 	type: 'postgres',
@@ -65,7 +44,7 @@ const appDataSource = new DataSource({
 				password: process.env.DB_PASSWORD_PROD,
 		  }
 		: {
-				database: 'reddit',
+				database: process.env.DB_NAME_DEV,
 				username: process.env.DB_USERNAME_DEV,
 				password: process.env.DB_PASSWORD_DEV,
 		  }),
@@ -88,10 +67,12 @@ const main = async () => {
 	const dataSource = await appDataSource.initialize();
 
 	if (__prod__) {
+		console.log('RUN MIGRATIONS!!!');
 		await dataSource.runMigrations();
 	}
 
 	const app = express();
+	const httpServer = http.createServer(app);
 
 	//cors
 	app.use(
@@ -136,29 +117,48 @@ const main = async () => {
 	);
 
 	// apollo server
-	const apolloServer = new ApolloServer({
+	const apolloServer = new ApolloServer<Context>({
 		schema: await buildSchema({
 			resolvers: [UserResolver, HelloResolver, PostResolver],
 			validate: false,
 		}),
 		persistedQueries: false,
-		context: ({ req, res }): Context => ({
-			req,
-			res,
-			connection: dataSource,
-			dataLoaders: buildDataLoaders(),
-		}),
+
 		plugins: [
-			ApolloServerPluginLandingPageGraphQLPlayground({
-				settings: {
-					'request.credentials': 'include',
-				},
-			}),
+			ApolloServerPluginDrainHttpServer({ httpServer }),
+			process.env.NODE_ENV === 'production'
+				? ApolloServerPluginLandingPageProductionDefault({
+						graphRef: 'my-graph-id@my-graph-variant',
+						footer: false,
+				  })
+				: ApolloServerPluginLandingPageLocalDefault({ footer: false }),
 		],
 	});
 
 	await apolloServer.start();
-	apolloServer.applyMiddleware({ app, cors: false });
+
+	app.use(
+		'/graphql',
+		cors<cors.CorsRequest>({
+			origin: [
+				'https://red-clone-be.onrender.com',
+				'http://localhost:3000',
+			],
+		}),
+		json(),
+		expressMiddleware(apolloServer, {
+			context: async ({ req, res }) => ({
+				req,
+				res,
+				connection: dataSource,
+				dataLoaders: buildDataLoaders(),
+			}),
+		})
+	);
+
+	app.use('/', (_req, res) => {
+		res.send('Hey there, you might want to navigate to /graphql');
+	});
 
 	// error handlers
 	app.use('*', (_req, _res, next) => {
@@ -166,11 +166,15 @@ const main = async () => {
 	});
 
 	// start server
-	const port = process.env.PORT || 4000;
+	const PORT = process.env.PORT || 4000;
 
-	app.listen(port, () => {
+	const APP_URL = __prod__
+		? `${process.env.APP_PROD_URL}/graphql`
+		: `${process.env.APP_DEV_URL}:${PORT}/graphql`;
+
+	app.listen(PORT, () => {
 		console.log(
-			`🫡 ✈️ SERVER STARTED ON PORT: ${port}, GRAPHQL SERVER STARTED ON localhost:${port}${apolloServer.graphqlPath} 👏`
+			`🫡 SERVER STARTED ON PORT: ${PORT}, GRAPHQL SERVER STARTED ON ${APP_URL} 👏`
 		);
 	});
 };

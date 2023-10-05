@@ -21,8 +21,8 @@ import { PostMutationResponse } from '../types/PostMutationResponse';
 import { UpdatePostInput } from '../types/UpdatePostInput';
 import { Context } from '../types/Context';
 import { VoteType } from '../types/VoteType';
-import { UserInputError } from 'apollo-server-core';
 import { Upvote } from '../entities/Upvote';
+import { GraphQLError } from 'graphql';
 
 registerEnumType(VoteType, {
 	name: 'VoteType', // this is mandatory
@@ -310,7 +310,7 @@ export class PostResolver {
 				});
 
 				if (!post) {
-					throw new UserInputError('Post Not found');
+					throw new GraphQLError('Post Not found');
 				}
 
 				// check if user voted or not

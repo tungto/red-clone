@@ -1,13 +1,18 @@
-import { AuthenticationError } from 'apollo-server-core';
-import { Context } from '../types/Context';
+import { GraphQLError } from 'graphql';
 import { MiddlewareFn } from 'type-graphql';
+import { Context } from '../types/Context';
 
 export const checkAuth: MiddlewareFn = async ({ context }, next) => {
 	const { req } = context as Context;
 
 	if (!req.session.userId) {
-		throw new AuthenticationError(
-			'Not authenticated to perform GraphQL operations'
+		throw new GraphQLError(
+			'You are not authorized to perform this action.'
+			// {
+			// 	extensions: {
+			// 		code: 'FORBIDDEN',
+			// 	}
+			// }
 		);
 	}
 
