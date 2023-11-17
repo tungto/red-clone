@@ -78,7 +78,10 @@ const main = async () => {
 	app.use(
 		cors({
 			origin: __prod__
-				? process.env.CORS_ORIGIN_PROD
+				? [
+						process.env.CORS_ORIGIN_PROD!,
+						'https://studio.apollographql.com',
+				  ]
 				: process.env.CORS_ORIGIN_DEV,
 			credentials: true,
 		})
@@ -143,6 +146,8 @@ const main = async () => {
 			origin: [
 				'https://red-clone-be.onrender.com',
 				'http://localhost:3000',
+				'https://studio.apollographql.com',
+				'',
 			],
 		}),
 		json(),

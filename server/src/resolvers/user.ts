@@ -190,6 +190,7 @@ export class UserResolver {
 				message: 'Login successfully!',
 			};
 		} catch (error) {
+			console.log('LOGIN ERROR: ', error);
 			return {
 				code: 500,
 				message: `Internal server error ${error.message}`,

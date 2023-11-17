@@ -310,6 +310,7 @@ export class PostResolver {
 				});
 
 				if (!post) {
+					console.log('POST NOT FOUND ERROR');
 					throw new GraphQLError('Post Not found');
 				}
 
