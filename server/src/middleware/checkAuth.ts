@@ -1,23 +1,19 @@
 import { GraphQLError } from 'graphql';
-import { MiddlewareFn } from 'type-graphql';
 import { Context } from '../types/Context';
+import { MiddlewareFn } from 'type-graphql';
 
 export const checkAuth: MiddlewareFn = async ({ context }, next) => {
 	const { req } = context as Context;
 
-	if (!req.session.userId) {
-		console.log('AUTHENTICATION ERROR!!!');
+	if (!req.session.userId)
 		throw new GraphQLError(
 			'You are not authorized to perform this action.',
 			{
-				//@ts-expect-error
 				extensions: {
-					code: 'UNAUTHENTICATED',
-					http: { status: 401 },
+					code: 'FORBIDDEN',
 				},
 			}
 		);
-	}
 
 	return next();
 };

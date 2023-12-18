@@ -278,7 +278,7 @@ export type PostQueryVariables = Exact<{
 }>;
 
 
-export type PostQuery = { __typename?: 'Query', getPost?: { __typename?: 'Post', id: string, title: string, text: string, createdAt: any, updatedAt: any, user: { __typename?: 'User', id: string } } | null };
+export type PostQuery = { __typename?: 'Query', getPost?: { __typename?: 'Post', id: string, title: string, text: string, createdAt: any, updatedAt: any, points: number, voteType: number, user: { __typename?: 'User', id: string } } | null };
 
 export type PostIdsQueryVariables = Exact<{
   limit: Scalars['Int']['input'];
@@ -718,6 +718,8 @@ export const PostDocument = gql`
     text
     createdAt
     updatedAt
+    points
+    voteType
     user {
       id
     }

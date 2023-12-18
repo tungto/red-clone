@@ -13,9 +13,10 @@ import { PaginatedPosts, Post } from '../generated/graphql';
 import { IncomingHttpHeaders } from 'http';
 import fetch from 'isomorphic-unfetch';
 import Router from 'next/router';
+import { __prod__ } from '../../../server/src/constants';
 
 export const APOLLO_STATE_PROP_NAME = '__APOLLO_STATE__';
-export const UNAUTHENTICATED_ERROR_CODE = 'UNAUTHENTICATED';
+export const UNAUTHENTICATED_ERROR_CODE = 'FORBIDDEN';
 
 type InitializeObject = {
 	initialState?: NormalizedCacheObject | null;
@@ -77,7 +78,7 @@ function createApolloClient(headers: IncomingHttpHeaders | null = null) {
 	});
 
 	return new ApolloClient({
-		connectToDevTools: true,
+		connectToDevTools: !__prod__,
 		ssrMode: typeof window === 'undefined',
 		link: from([errorLink, httpLink]),
 		cache: new InMemoryCache({

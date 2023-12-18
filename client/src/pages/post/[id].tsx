@@ -1,4 +1,4 @@
-import { Box, Button, Flex, Spinner } from '@chakra-ui/react';
+import { Box, Button, Flex, Heading, Spinner, Text } from '@chakra-ui/react';
 import { GetStaticPaths, GetStaticProps } from 'next';
 import NextLink from 'next/link';
 import { useRouter } from 'next/router';
@@ -40,13 +40,14 @@ const Post = () => {
 			</Layout>
 		);
 	}
-
 	return (
 		<Layout>
 			<Box>
 				<Box mb={10}>
-					<h1>{data.getPost.title}</h1>
-					<p>{data.getPost.text}</p>
+					<Heading as='h1' size='lg'>
+						{data.getPost.title}
+					</Heading>
+					<Text mt={4}>{data.getPost.text}</Text>
 				</Box>
 				<Flex>
 					<PostEditDeleteBtn

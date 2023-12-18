@@ -5,6 +5,8 @@ query Post($id: ID!) {
 		text
 		createdAt
 		updatedAt
+		points
+		voteType
 		user {
 			id
 		}

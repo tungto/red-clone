@@ -74,19 +74,6 @@ const main = async () => {
 	const app = express();
 	const httpServer = http.createServer(app);
 
-	//cors
-	app.use(
-		cors({
-			origin: __prod__
-				? [
-						process.env.CORS_ORIGIN_PROD!,
-						'https://studio.apollographql.com',
-				  ]
-				: process.env.CORS_ORIGIN_DEV,
-			credentials: true,
-		})
-	);
-
 	// logging
 	app.use(morgan('dev'));
 
@@ -144,10 +131,9 @@ const main = async () => {
 		'/graphql',
 		cors<cors.CorsRequest>({
 			origin: [
-				'https://red-clone-be.onrender.com',
-				'http://localhost:3000',
-				'https://studio.apollographql.com',
-				'',
+				process.env.CORS_ORIGIN_PROD!,
+				process.env.CORS_ORIGIN_DEV!,
+				process.env.CORS_ORIGIN_APOLLO!,
 			],
 		}),
 		json(),
@@ -160,9 +146,8 @@ const main = async () => {
 			}),
 		})
 	);
-
 	app.use('/', (_req, res) => {
-		res.send('Hey there, you might want to navigate to /graphql');
+		res.send('Hello from red clone');
 	});
 
 	// error handlers
@@ -175,7 +160,7 @@ const main = async () => {
 
 	const APP_URL = __prod__
 		? `${process.env.APP_PROD_URL}/graphql`
-		: `${process.env.APP_DEV_URL}:${PORT}/graphql`;
+		: `${process.env.APP_DEV_URL}/graphql`;
 
 	app.listen(PORT, () => {
 		console.log(

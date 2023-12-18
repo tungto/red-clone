@@ -1,11 +1,9 @@
-### Bugs:
-
--   duplicate posts on login then logout
-    yarn typeorm migration:generate migrations -d ./src/utils/dataSource.ts
-    yarn typeorm migration:create src/migrations
--   Generate a migration from existing table
-
 ## Migration
+
+```
+    yarn typeorm migration:generate migrations -d ./src/utils/dataSource.ts
+   yarn typeorm migration:create src/migrations
+```
 
 -   compare new database with existing schema in the codebase
 
