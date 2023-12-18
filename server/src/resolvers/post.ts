@@ -154,11 +154,11 @@ export class PostResolver {
 				paginatedPosts: posts,
 				totalCount: totalPostCount,
 				hasMore: cursor
-					? posts[posts.length - 1].createdAt.toString() !==
-					  lastPost.createdAt.toString()
+					? posts[posts.length - 1].createdAt?.toString() !==
+					  lastPost?.createdAt?.toString()
 					: posts.length !== totalPostCount,
 				// Get the date of the current oldest post fetched on the FE
-				cursor: posts[posts.length - 1].createdAt,
+				cursor: posts[posts.length - 1]?.createdAt,
 			};
 		} catch (error) {
 			console.log(`ERROR GET POSTS: `, error.message);

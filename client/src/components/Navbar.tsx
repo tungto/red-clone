@@ -31,10 +31,6 @@ export const Navbar = () => {
 					cache.modify({
 						fields: {
 							getPosts(existing: PostsCacheObject) {
-								console.log(
-									`EXISTING CURSOR: `,
-									existing.cursor
-								);
 								existing.paginatedPosts.forEach((post) => {
 									cache.writeFragment({
 										id: post.__ref,

@@ -33,7 +33,6 @@ const Index = () => {
 		fetchMore({ variables: { cursor: data?.getPosts?.cursor } });
 	};
 
-	console.log(`index data: `, data);
 
 	return (
 		<Layout>

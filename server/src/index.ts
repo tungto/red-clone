@@ -74,6 +74,19 @@ const main = async () => {
 	const app = express();
 	const httpServer = http.createServer(app);
 
+	//cors
+	app.use(
+		cors({
+			origin: __prod__
+				? [
+						process.env.CORS_ORIGIN_PROD!,
+						'https://studio.apollographql.com',
+				  ]
+				: process.env.CORS_ORIGIN_DEV,
+			credentials: true,
+		})
+	);
+
 	// logging
 	app.use(morgan('dev'));
 
@@ -88,6 +101,8 @@ const main = async () => {
 
 	console.log('MongoDB Connected!');
 
+	app.set('trust proxy', 1);
+
 	app.use(
 		session({
 			name: COOKIE_NAME,
@@ -96,9 +111,8 @@ const main = async () => {
 				// maxAge: 1000 * 60 * 60, // one hour
 				maxAge: 1000 * 60 * 60, // 1 h
 				httpOnly: true, // JS front end cannot access the cookie
-				sameSite: 'lax', // todo check about this, why false not working
+				sameSite: 'none', // todo check about this, why false not working
 				secure: __prod__,
-				domain: __prod__ ? '.vercel.app' : undefined,
 			},
 			secret: process.env.SESSION_COOKIE_SECRET as string,
 			saveUninitialized: false, // don't save empty sessions, right from the start
