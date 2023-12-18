@@ -111,7 +111,7 @@ const main = async () => {
 				// maxAge: 1000 * 60 * 60, // one hour
 				maxAge: 1000 * 60 * 60, // 1 h
 				httpOnly: true, // JS front end cannot access the cookie
-				sameSite: 'none', // todo check about this, why false not working
+				sameSite: __prod__ ? 'none' : 'lax', // todo check about this, why false not working
 				secure: __prod__,
 			},
 			secret: process.env.SESSION_COOKIE_SECRET as string,

@@ -268,6 +268,7 @@ export class PostResolver {
 			}
 
 			if (existingPost) {
+				await Upvote.delete({ postId: id });
 				await Post.delete(id);
 
 				return {
