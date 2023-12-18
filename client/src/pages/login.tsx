@@ -54,8 +54,8 @@ const Login = () => {
 		// login successfully
 		if (response.data?.login.user) {
 			toast({
-				title: 'Account created.',
-				description: `We've created your account for ${response.data?.login.user.username}.`,
+				title: 'Login success.',
+				description: `Welcome ${response.data?.login.user.username}.`,
 				status: 'success',
 				duration: 3000,
 				isClosable: true,

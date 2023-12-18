@@ -6,7 +6,7 @@ const Layout = ({ children }) => {
 	return (
 		<>
 			<Navbar />
-			<Wrapper>{children}</Wrapper>
+			<Wrapper size='regular'>{children}</Wrapper>
 		</>
 	);
 };
